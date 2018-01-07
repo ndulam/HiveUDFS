@@ -38,3 +38,41 @@ public class IpSplit extends UDF {
             return trgt;
         }
     }
+
+
+
+
+create external table abc_test(ips string,range string)row format delimited fields terminated by ',' location '/tx/ipaddress';
+
+file.txt:
+110.1.10.1-10.1.10.4,10.1.10.1-10.1.10.3
+10.1.10.5-10.1.10.7;10.1.10.1-10.1.10.3,10.1.10.3
+
+
+add jar /home/cloudera/Desktop/brickhouse-master/target/brickhouse-0.7.1-SNAPSHOT.jar;
+CREATE TEMPORARY FUNCTION ipsplit as 'brickhouse.udf.collect.IpSplit';
+
+
+SELECT myCol1, myCol2 FROM(select ipsplit(ips) as temp1,ipsplit(range) as temp2 from abc_test)A LATERAL VIEW explode(A.temp1) myTable1 AS myCol1  LATERAL VIEW explode(A.temp2) myTable2 AS myCol2;
+
+
+ouput:
+
+110.1.10.1	10.1.10.1
+110.1.10.1	10.1.10.2
+110.1.10.1	10.1.10.3
+110.1.10.2	10.1.10.1
+110.1.10.2	10.1.10.2
+110.1.10.2	10.1.10.3
+110.1.10.3	10.1.10.1
+110.1.10.3	10.1.10.2
+110.1.10.3	10.1.10.3
+10.1.10.4	10.1.10.1
+10.1.10.4	10.1.10.2
+10.1.10.4	10.1.10.3
+10.1.10.5	10.1.10.3
+10.1.10.6	10.1.10.3
+10.1.10.7	10.1.10.3
+10.1.10.1	10.1.10.3
+10.1.10.2	10.1.10.3
+10.1.10.3	10.1.10.3
