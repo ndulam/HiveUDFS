@@ -1,0 +1,40 @@
+import org.apache.hadoop.hive.ql.exec.UDF;
+import java.util.ArrayList;
+import java.util.List;
+public class IpSplit extends UDF {
+    public ArrayList<String> evaluate(String col) {
+        if (col == null || col.isEmpty()) {
+            return null;
+        }
+        String temp[] = col.split("\\;");
+        ArrayList<String> trgt = new ArrayList<String>();
+                if(temp.length==0)
+                {
+                    temp[0] = col;
+                }
+            for (String str : temp) {
+
+                String ips[] = str.split("\\-");
+                if(ips.length==1)
+                {
+                    trgt.add(str);
+                }
+                else {
+                    int diff = Integer.parseInt(ips[1].split("\\.")[3])
+                            - Integer.parseInt(ips[0].split("\\.")[3]);
+                    trgt.add(ips[0]);
+
+                    for (int i = 1; i < diff; i++) {
+                        int start = Integer.parseInt(ips[0].split("\\.")[3]) + i;
+
+                        String ip = ips[0].split("\\.")[0] + "." + ips[0].split("\\.")[1]
+                                + "." + ips[0].split("\\.")[2] + "." + start;
+                        trgt.add(ip);
+                    }
+
+                    trgt.add(ips[1]);
+                }
+            }
+            return trgt;
+        }
+    }
